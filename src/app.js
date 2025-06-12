@@ -2,24 +2,18 @@ const express  = require("express");
 
 const app = express();
 
-app.use("/test",(req, res)=>{
-    
-    res.send("For Testing purpose.");
+app.get("/user",(req, res)=>{
+    res.send("User data fetched.");
+})
 
-});
+app.post("/user",(req, res)=>{
+    //Code to save data of user
+    res.send("User data saved successfully");
+})
 
-app.use("/happy",(req, res)=>{
-    
-    res.send("Happy Happy.");
-
-});
-
-
-app.use("/",(req, res)=>{
-    
-    res.end("Hello and Namaste.");
-
-});
+app.delete("/user",(req, res)=>{
+    res.send("User deleted successfully");
+})
 
 
 app.listen(3000, ()=>{
