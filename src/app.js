@@ -3,10 +3,29 @@ const connectDB = require("./config/database")
 const app = express();
 const User = require("./models/user");
 app.use(express.json());
+const {validateSignupData} = require("./utils/validations");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+const jwt = require("jsonwebtoken");
+const {authUser} = require("./middlewares/authUser");
 
 app.post("/signup",async(req, res)=>{
-    const user = new User(req.body);
-    try{
+      try{
+    
+    validateSignupData(req);
+    const {firstName, lastName, emailId, password} = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new User({
+        firstName,
+        lastName,
+        emailId,
+        password: passwordHash,
+    }
+    );
+  
         await user.save();
     res.send("User added successfully.");
     }catch(err){
@@ -14,6 +33,49 @@ app.post("/signup",async(req, res)=>{
     }
     
 });
+
+app.post("/login", async(req, res)=>{
+    try {
+        const {emailId, password} = req.body;
+    if(!validator.isEmail(emailId))
+    {
+        throw new Error("Email ID is not valid.");
+    }    
+
+    const user = await User.findOne({emailId: emailId});
+    if(!user)
+    {
+        throw new Error("Invalid Credentials.");
+    }
+    const isPasswordValid = await user.validatePassword(password);
+    if(isPasswordValid)        
+    {
+        const token = await user.getJWT();
+        console.log(token)
+        res.cookie("token", token, {expires: new Date(Date.now() + 8 * 3600000)});
+        res.status(200).send("Login Successful!!");
+    }
+    else{
+        throw new Error("Invalid Credentials.");
+    }
+    } catch (error) {
+        res.status(400).send("ERROR : "+ error.message);
+    }
+    
+
+})
+
+app.get("/profile",authUser, async(req, res)=>{
+    try {
+    const user = req.user;
+    res.send(user);
+        
+    } catch (error) {
+        res.status(400).send("ERROR: "+error.message);
+        
+    }
+
+})
 
 app.get("/feed",async (req, res)=>{
     try{
@@ -94,4 +156,3 @@ connectDB().then(()=>{
 }).catch((err)=>{
     console.log("Database can not be connected!!")
 })
-
