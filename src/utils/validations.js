@@ -24,7 +24,7 @@ const validateEditProfileData = (req) => {
 }
 
 const validateEditPassword = (req) => {
-    const allowedEditFields = ["newPassword", "confirmNewPassword`````````````````````````````````````````````````````````"];
+    const allowedEditFields = ["newPassword", "confirmNewPassword"];
     const isEditAllowed = Object.keys(req.body).every(field => allowedEditFields.includes(field));
     return isEditAllowed;
 }
